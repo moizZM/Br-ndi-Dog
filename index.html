@@ -8,161 +8,94 @@
         body {
             font-family: Arial, sans-serif;
             text-align: center;
-            background-color: #f4f4f9;
-        }
-        .board-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-top: 20px;
         }
         .board {
-            position: relative;
-            width: 400px;
-            height: 400px;
-            background-color: #f3f3f3;
-            border-radius: 50%;
-            border: 3px solid #333;
+            display: grid;
+            grid-template-columns: repeat(10, 50px);
+            grid-gap: 10px;
+            margin: 50px auto;
+            width: 600px;
+            height: 600px;
         }
         .cell {
-            position: absolute;
-            width: 40px;
-            height: 40px;
-            background: white;
-            border-radius: 50%;
-            border: 1px solid black;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            width: 50px;
+            height: 50px;
+            background-color: #f4f4f4;
+            border: 1px solid #333;
+            position: relative;
         }
-        .piece {
-            font-weight: bold;
-            color: red;
+        .marble {
+            width: 30px;
+            height: 30px;
+            background-color: #ff6347;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
         }
         button {
-            padding: 10px 20px;
-            margin: 10px;
-            font-size: 16px;
-        }
-        .player {
-            margin: 10px;
+            margin: 20px;
         }
     </style>
 </head>
 <body>
-    <h2>Brändi Dog Game</h2>
-    <p>Player <span id="turn">1</span>'s turn</p>
-    <p>Click a card to play:</p>
-    <div class="player" id="cards-container">
-        <!-- Cards will be displayed here dynamically -->
+
+    <h1>Brändi Dog Game</h1>
+    <p>Click a marble to move!</p>
+    
+    <div class="board" id="board">
+        <!-- Cells will be created here dynamically -->
     </div>
-
-    <h3>Game Board</h3>
-    <div class="board-container">
-        <div class="board" id="board"></div>
-    </div>
-
-    <p id="status">Waiting for action...</p>
-
+    
+    <button onclick="moveMarble(1)">Move Marble 1</button>
+    <button onclick="moveMarble(2)">Move Marble 2</button>
+    <button onclick="moveMarble(3)">Move Marble 3</button>
+    <button onclick="moveMarble(4)">Move Marble 4</button>
+    
     <script>
-        const players = ["Player 1", "Player 2", "Player 3", "Player 4"];
-        const deck = (['Ace', 'King', 'Queen', 'Jack', 'Joker'] +
-            [2, 3, 4, 5, 6, 7, 8, 9, 10].map(String)) * 4; // Full deck
-        let gameState = {
-            turn: 1, 
-            positions: {1: 0, 2: 0, 3: 0, 4: 0},
-            cards: {1: [], 2: [], 3: [], 4: []},
-            finished: {1: false, 2: false, 3: false, 4: false}
-        };
+        // Game board setup
+        const board = document.getElementById("board");
+        const boardSize = 10;
+        let marbles = [0, 1, 2, 3]; // Initial marble positions
 
-        // Custom shuffle function
-        function shuffle(deck) {
-            for (let i = deck.length - 1; i > 0; i--) {
-                let j = Math.floor(Math.random() * (i + 1));
-                [deck[i], deck[j]] = [deck[j], deck[i]];
-            }
-            return deck;
+        // Create board grid cells
+        for (let i = 0; i < boardSize * boardSize; i++) {
+            const cell = document.createElement("div");
+            cell.classList.add("cell");
+            cell.id = "cell-" + i;
+            board.appendChild(cell);
         }
 
-        // Shuffle and distribute cards
-        function shuffleAndDistribute() {
-            let shuffledDeck = shuffle([...deck]);
-            for (let i = 1; i <= 4; i++) {
-                gameState.cards[i] = shuffledDeck.splice(0, 6);
-            }
-        }
-
-        // Generate game cards HTML
-        function generateCards() {
-            const cardContainer = document.getElementById('cards-container');
-            const playerCards = gameState.cards[gameState.turn];
-            cardContainer.innerHTML = "";
-            playerCards.forEach(card => {
-                let button = document.createElement('button');
-                button.innerText = card;
-                button.onclick = () => playCard(card);
-                cardContainer.appendChild(button);
+        // Place marbles
+        function placeMarbles() {
+            const cells = document.querySelectorAll(".cell");
+            marbles.forEach((position, index) => {
+                const cell = cells[position];
+                const marble = document.createElement("div");
+                marble.classList.add("marble");
+                marble.id = "marble-" + index;
+                cell.appendChild(marble);
             });
         }
 
-        // Play card function
-        function playCard(card) {
-            const player = gameState.turn;
-            if (gameState.cards[player].includes(card)) {
-                gameState.cards[player] = gameState.cards[player].filter(c => c !== card);
-                gameState.positions[player] += card === "Ace" ? 1 : (parseInt(card) || 1);
-
-                if (gameState.positions[player] >= 40) {
-                    gameState.finished[player] = true;
-                    document.getElementById('status').innerText = `${players[player - 1]} wins!`;
-                } else {
-                    gameState.turn = (gameState.turn % 4) + 1;
-                    document.getElementById('turn').innerText = gameState.turn;
-                }
-                generateCards();
+        // Move a marble
+        function moveMarble(marbleIndex) {
+            const newPosition = marbles[marbleIndex] + 1; // Just an example to move one step
+            if (newPosition < boardSize * boardSize) {
+                marbles[marbleIndex] = newPosition;
                 updateBoard();
-            } else {
-                alert("Invalid card!");
             }
         }
 
-        // Generate board positions
-        function generateBoard() {
-            const board = document.getElementById('board');
-            let positions = [];
-            for (let i = 0; i < 40; i++) {
-                let cell = document.createElement('div');
-                cell.className = 'cell';
-                let x = 200 + 100 * Math.cos((i / 40) * 2 * Math.PI);
-                let y = 200 + 100 * Math.sin((i / 40) * 2 * Math.PI);
-                cell.style.left = `${x}px`;
-                cell.style.top = `${y}px`;
-                board.appendChild(cell);
-            }
-        }
-
-        // Update board state
+        // Update board after a move
         function updateBoard() {
-            const boardCells = document.querySelectorAll('.cell');
-            boardCells.forEach(cell => cell.innerHTML = '');
-            for (let player in gameState.positions) {
-                let pos = gameState.positions[player] % 40;
-                let cell = boardCells[pos];
-                if (cell) {
-                    cell.innerHTML = `<span class="piece">P${player}</span>`;
-                }
-            }
+            const cells = document.querySelectorAll(".cell");
+            cells.forEach(cell => cell.innerHTML = ""); // Clear all cells
+            placeMarbles();
         }
 
-        // Initialize game
-        function startGame() {
-            shuffleAndDistribute();
-            generateCards();
-            generateBoard();
-            updateBoard();
-        }
-
-        startGame();
+        placeMarbles();
     </script>
 </body>
 </html>
